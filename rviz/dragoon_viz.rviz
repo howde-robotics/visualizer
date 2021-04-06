@@ -70,7 +70,7 @@ Visualization Manager:
       Topic: /guiText
       Value: true
       font: DejaVu Sans Mono
-      height: 128
+      height: 138
       left: 0
       line width: 2
       text size: 12
@@ -91,12 +91,12 @@ Visualization Manager:
       Topic: /rosconsole_overlay_text/output
       Value: true
       font: DejaVu Sans Mono
-      height: 128
-      left: 200
+      height: 300
+      left: 0
       line width: 2
       text size: 12
-      top: 0
-      width: 128
+      top: 140
+      width: 200
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /dragoon_mesh

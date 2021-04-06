@@ -6,12 +6,26 @@
 #include "dragoon_messages/watchStatus.h"
 #include <jsk_rviz_plugins/OverlayText.h>
 #include <sstream>
+#include <vector>
+
+std::vector<char> status;
+
+void healthSubCB(const dragoon_messages::watchStatusConstPtr& msg)
+{
+    status.clear();
+    for (auto stat : msg->status_array){
+        status.push_back(stat);
+    }
+    
+}
 
 int main(int argc, char** argv)
 {
 ros::init(argc, argv, "visualizer");
 ros::NodeHandle nh;
 ros::Rate loop_rate(1);
+
+ros::Subscriber health_sub = nh.subscribe("/health_status", 5, healthSubCB);
 
 ros::Publisher overlay_pub = nh.advertise<jsk_rviz_plugins::OverlayText>("guiText", 10);
 jsk_rviz_plugins::OverlayText text;
@@ -56,10 +70,33 @@ while(ros::ok()) {
     // vis_pub.publish( marker );
     ++count;
     std::stringstream ss;
-    ss << "Health Monitor\n";
+    ss << "Health Status" << std::endl;
+    if(status.size() > 0) {
+        ss << "LIDAR:\t" << (status.at(0) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Seek:\t" << (status.at(1) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Realsense:\t" << (status.at(2) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Peripheral:\t" << (status.at(3) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Localize:\t" << (status.at(4) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Detection:\t" << (status.at(5) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+    } else {
+        ss << "No Health Status to report" << std::endl;
+    }
+    
     text.text = ss.str();
     overlay_pub.publish(text);
-    ROS_WARN("test warning");
+    // ROS_WARN("test warning");
     ros::spinOnce();
     loop_rate.sleep();
 }

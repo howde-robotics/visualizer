@@ -12,8 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   visualization_msgs
-  dragoon_messages
   jsk_rviz_plugins
+  dragoon_messages
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES visualizer
- CATKIN_DEPENDS roscpp sensor_msgs std_msgs visualization_msgs jsk_rviz_plugins
+ CATKIN_DEPENDS roscpp sensor_msgs std_msgs visualization_msgs jsk_rviz_plugins dragoon_messages
 #  DEPENDS system_lib
 )
 
