@@ -1,0 +1,18 @@
+<launch>
+    <node pkg="visualizer" type="visualizer" name="visualizer">
+    </node>
+    
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 /map /base_link 100" />
+    
+    <node pkg="jsk_rviz_plugins"
+        type="rosconsole_overlay_text.py"
+        respawn="true"
+        name="rosconsole_overlay_text">
+    <rosparam>
+      reverse_lines: false
+    </rosparam>
+    </node>
+    
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualizer)/rviz/dragoon_viz.rviz" />
+
+</launch>
