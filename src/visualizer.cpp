@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 
+#include <tf2_ros/transform_broadcaster.h>
+
 #include "dragoon_messages/watchHeartbeat.h"
 #include "dragoon_messages/watchStatus.h"
 // #include "dragoon_messages/ObjectInfo.h"
@@ -24,8 +26,25 @@ void healthSubCB(const dragoon_messages::watchStatusConstPtr& msg)
 
 void objectPosesCB(const dragoon_messages::ObjectsConstPtr& msg) 
 {
-    ROS_INFO_STREAM("Human Detection callback");
+    static tf2_ros::TransformBroadcaster br;
+    for (auto obj : msg->objects_info) {
+        if (obj.Class == "person") {
+            ROS_INFO_STREAM("PERSON DETECTED with prob: " << obj.probability);
+            geometry_msgs::TransformStamped transformStamped;
+            transformStamped.header.stamp = ros::Time::now();
+            transformStamped.header.frame_id = "camera_depth_optical_frame";
+            transformStamped.child_frame_id = "huamn";
+            transformStamped.transform.translation.x = obj.pose.x;
+            transformStamped.transform.translation.y = obj.pose.y;
+            transformStamped.transform.translation.z = obj.pose.z;
+            transformStamped.transform.rotation.x = 0;
+            transformStamped.transform.rotation.y = 0;
+            transformStamped.transform.rotation.z = 0;
+            transformStamped.transform.rotation.w = 1;
 
+            br.sendTransform(transformStamped);
+        }
+    }
 }
 
 int main(int argc, char** argv)
