@@ -42,7 +42,7 @@ void objectPosesCB(const dragoon_messages::ObjectsConstPtr& msg)
             transformStamped.transform.rotation.z = 0;
             transformStamped.transform.rotation.w = 1;
 
-            br.sendTransform(transformStamped);
+            // br.sendTransform(transformStamped);
         }
     }
 }
@@ -62,7 +62,7 @@ jsk_rviz_plugins::OverlayText text;
 text = jsk_rviz_plugins::OverlayText();
 // theta = counter % 255 / 255.0;
 text.width = 400;
-text.height = 600;
+text.height = 1000;
 text.left = 10;
 text.top = 10;
 text.text_size = 12;
@@ -108,16 +108,21 @@ while(ros::ok()) {
         ss << "Seek:\t" << (status.at(1) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
-        ss << "Realsense:\t" << (status.at(2) ? "<span style=\"color: green;\">OK</span>" :
+        ss << "Realsense RGB:\t" << (status.at(2) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
-        ss << "Peripheral:\t" << (status.at(3) ? "<span style=\"color: green;\">OK</span>" :
+
+        ss << "Realsense Depth:\t" << (status.at(3) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
-        ss << "Localize:\t" << (status.at(4) ? "<span style=\"color: green;\">OK</span>" :
+
+        ss << "Transformed IMU:\t" << (status.at(4) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
-        ss << "Detection:\t" << (status.at(5) ? "<span style=\"color: green;\">OK</span>" :
+        ss << "Localize:\t" << (status.at(5) ? "<span style=\"color: green;\">OK</span>" :
+                                        "<span style=\"color: red;\">BAD</span>" )
+            << std::endl;
+        ss << "Detection:\t" << (status.at(6) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
     } else {
