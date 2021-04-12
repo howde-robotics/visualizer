@@ -101,7 +101,7 @@ Visualization Manager:
       Marker Topic: /dragoon_mesh
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -135,7 +135,13 @@ Visualization Manager:
           Value: true
         horizontal_laser_link:
           Value: true
+        huamn:
+          Value: true
         imu_link:
+          Value: true
+        map:
+          Value: true
+        odom:
           Value: true
         seek_link:
           Value: true
@@ -145,7 +151,32 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        map:
+          odom:
+            base_link:
+              camera_bottom_screw_frame:
+                camera_link:
+                  camera_accel_frame:
+                    camera_accel_optical_frame:
+                      {}
+                  camera_aligned_depth_to_color_frame:
+                    camera_color_optical_frame:
+                      {}
+                  camera_color_frame:
+                    {}
+                  camera_depth_frame:
+                    camera_depth_optical_frame:
+                      huamn:
+                        {}
+                  camera_gyro_frame:
+                    camera_imu_optical_frame:
+                      {}
+              horizontal_laser_link:
+                {}
+              imu_link:
+                {}
+              seek_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -163,7 +194,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 100
+      Max Intensity: 117
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: LaserScan
@@ -233,6 +264,22 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /human_detections_vis/evidence
+      Name: MarkerArray
+      Namespaces:
+        detections/evidence: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /human_detections_vis/state
+      Name: MarkerArray
+      Namespaces:
+        detections/state: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -261,25 +308,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.685861587524414
+      Distance: 9.23598861694336
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 2.4401206970214844
+        Y: 0.4551851153373718
+        Z: 0.01697131246328354
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5597963333129883
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.133575201034546
+      Yaw: 3.1435747146606445
     Saved:
       - Class: rviz/Orbit
         Distance: 10
