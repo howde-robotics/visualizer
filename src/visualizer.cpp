@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 {
 ros::init(argc, argv, "visualizer");
 ros::NodeHandle nh;
-ros::Rate loop_rate(30);
+ros::Rate loop_rate(10);
 
 ros::Subscriber health_sub = nh.subscribe("/health_status", 1, healthSubCB);
 
