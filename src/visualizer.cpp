@@ -96,9 +96,9 @@ void worldEvidenceCallback(const wire_msgs::WorldEvidence::ConstPtr& msg) {
                     marker.header.stamp = msg->header.stamp;
                     marker.header.frame_id = "map";
                     marker.type = visualization_msgs::Marker::SPHERE;
-                    marker.scale.x = 0.1;
-                    marker.scale.y = 0.1;
-                    marker.scale.z = 0.1;
+                    marker.scale.x = 0.2;
+                    marker.scale.y = 0.2;
+                    marker.scale.z = 0.2;
                     markers_msg.markers.push_back(marker);
                     ++id;
                 }
@@ -150,9 +150,9 @@ void worldStateCallback(const wire_msgs::WorldState::ConstPtr& msg) {
                     marker.header.stamp = msg->header.stamp;
                     marker.header.frame_id = "map";
                     marker.type = visualization_msgs::Marker::SPHERE;
-                    marker.scale.x = 0.2;
-                    marker.scale.y = 0.2;
-                    marker.scale.z = 0.2;
+                    marker.scale.x = 0.25;
+                    marker.scale.y = 0.25;
+                    marker.scale.z = 0.25;
                     markers_msg.markers.push_back(marker);
                     ++id;
                 } else {
@@ -175,10 +175,10 @@ ros::init(argc, argv, "visualizer");
 ros::NodeHandle nh;
 ros::Rate loop_rate(30);
 
-ros::Subscriber health_sub = nh.subscribe("/health_status", 5, healthSubCB);
+ros::Subscriber health_sub = nh.subscribe("/health_status", 1, healthSubCB);
 
-ros::Subscriber world_ev_sub = nh.subscribe("/world_evidence", 10, worldEvidenceCallback);
-ros::Subscriber world_st_sub = nh.subscribe("/world_state", 10, worldStateCallback);
+ros::Subscriber world_ev_sub = nh.subscribe("/world_evidence", 1, worldEvidenceCallback);
+ros::Subscriber world_st_sub = nh.subscribe("/world_state", 1, worldStateCallback);
 
 world_evidence_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/evidence", 10);
 world_state_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/state", 10);
@@ -226,31 +226,17 @@ while(ros::ok()) {
     vis_pub.publish(marker);
     ++count;
     std::stringstream ss;
+    std::vector<std::string> heartbeatNames {"lidar", "seek", "realsense_rgb" "realsense_depth", 
+                                    "transformed_imu", "localize", "detection", 
+                                    "detection_filtering", "slam"};
     ss << "Health Status" << std::endl;
-    if(status.size() == 7) {
-        ss << "LIDAR:\t" << (status.at(0) ? "<span style=\"color: green;\">OK</span>" :
+    if(status.size() <= heartbeatNames.size()) {
+        for (auto ind = 0; ind < status.size(); ++ind)
+        {
+            ss << heartbeatNames.at(ind) << ":\t" << (status.at(ind) ? "<span style=\"color: green;\">OK</span>" :
                                         "<span style=\"color: red;\">BAD</span>" )
             << std::endl;
-        ss << "Seek:\t" << (status.at(1) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
-        ss << "Realsense RGB:\t" << (status.at(2) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
-
-        ss << "Realsense Depth:\t" << (status.at(3) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
-
-        ss << "Transformed IMU:\t" << (status.at(4) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
-        ss << "Localize:\t" << (status.at(5) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
-        ss << "Detection:\t" << (status.at(6) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
+        }
     } else {
         ss << "No Health Status to report" << std::endl;
     }
