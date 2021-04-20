@@ -25,7 +25,6 @@ void healthSubCB(const dragoon_messages::watchStatusConstPtr& msg)
     for (auto stat : msg->status_array){
         status.push_back(stat);
     }
-    
 }
 
 
@@ -233,7 +232,7 @@ while(ros::ok()) {
     vis_pub.publish(marker);
     ++count;
     std::stringstream ss;
-    std::vector<std::string> heartbeatNames {"lidar", "seek", "realsense_rgb" "realsense_depth", 
+    std::vector<std::string> heartbeatNames {"lidar", "seek", "realsense_rgb", "realsense_depth", 
                                     "transformed_imu", "localize", "detection", 
                                     "detection_filtering", "slam"};
     ss << "Health Status" << std::endl;
