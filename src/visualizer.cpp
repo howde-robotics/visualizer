@@ -61,6 +61,34 @@ const pbl::Gaussian* getBestGaussian(const pbl::PDF& pdf, double min_weight) {
 	return NULL;
 }
 
+visualization_msgs::Marker makeSphereMarker(std::string ns, int32_t id, 
+    double x, double y, double z,
+    float alpha, float color_r, float color_g, float color_b, 
+    ros::Time stamp, std::string frame_id, double diameter) {
+
+    visualization_msgs::Marker marker;
+    marker.ns = ns;
+    marker.id = id;
+    marker.pose.position.x = x;
+    marker.pose.position.y = y;
+    marker.pose.position.z = z;
+    marker.pose.orientation.w = 1;
+    marker.pose.orientation.y = 0;
+    marker.pose.orientation.x = 0;
+    marker.pose.orientation.z = 0;
+    marker.color.a = alpha;
+    marker.color.r = color_r;
+    marker.color.g = color_g;
+    marker.color.b = color_b;
+    marker.header.stamp = stamp;
+    marker.header.frame_id = frame_id;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.scale.x = diameter;
+    marker.scale.y = diameter;
+    marker.scale.z = diameter;
+    return marker;
+}
+
 /*
  * World evidence callback. Creates a marker for each of the world model objects
  */
@@ -79,26 +107,11 @@ void worldEvidenceCallback(const wire_msgs::WorldEvidence::ConstPtr& msg) {
                 pbl::PDF* pdf = pbl::msgToPDF(prop.pdf);
                 const pbl::Gaussian* gauss = getBestGaussian(*pdf, mixtureWeightThresh);
                 if (gauss) {
-                    visualization_msgs::Marker marker;
                     const pbl::Vector& mean = gauss->getMean();
-                    marker.ns = "detections/evidence";
-                    marker.id = id;
-                    marker.pose.position.x = mean(0);
-                    marker.pose.position.y = mean(1);
-                    marker.pose.position.z = mean(2);
-                    marker.pose.orientation.w = 1;
-                    marker.pose.orientation.y = 0;
-                    marker.pose.orientation.x = 0;
-                    marker.pose.orientation.z = 0;
-                    marker.color.a = 0.5;
-                    marker.color.g = 1.0;
-                    marker.color.r = 1.0;
-                    marker.header.stamp = msg->header.stamp;
-                    marker.header.frame_id = "map";
-                    marker.type = visualization_msgs::Marker::SPHERE;
-                    marker.scale.x = 0.2;
-                    marker.scale.y = 0.2;
-                    marker.scale.z = 0.2;
+                    visualization_msgs::Marker marker = makeSphereMarker("detections/evidence", id, 
+                        mean(0), mean(1), mean(2),
+                        0.5, 1.0, 0.0, 0.0,
+                        msg->header.stamp, "map", 0.2);
                     markers_msg.markers.push_back(marker);
                     ++id;
                 }
@@ -134,26 +147,37 @@ void worldStateCallback(const wire_msgs::WorldState::ConstPtr& msg) {
                 pbl::PDF* pdf = pbl::msgToPDF(prop.pdf);
                 const pbl::Gaussian* gauss = getBestGaussian(*pdf, mixtureWeightThresh);
                 if (gauss) {
-                    visualization_msgs::Marker marker;
                     const pbl::Vector& mean = gauss->getMean();
-                    marker.ns = "detections/state";
-                    marker.id = id;
-                    marker.pose.position.x = mean(0);
-                    marker.pose.position.y = mean(1);
-                    marker.pose.position.z = mean(2);
-                    marker.pose.orientation.w = 1;
-                    marker.pose.orientation.y = 0;
-                    marker.pose.orientation.x = 0;
-                    marker.pose.orientation.z = 0;
-                    marker.color.a = 1.0;
-                    marker.color.g = 1.0;
-                    marker.header.stamp = msg->header.stamp;
-                    marker.header.frame_id = "map";
-                    marker.type = visualization_msgs::Marker::SPHERE;
-                    marker.scale.x = 0.25;
-                    marker.scale.y = 0.25;
-                    marker.scale.z = 0.25;
+                    visualization_msgs::Marker marker = makeSphereMarker("detections/state", id, 
+                        mean(0), mean(1), mean(2), 
+                        1.0, 0.0, 1.0, 0.0, 
+                        msg->header.stamp, "map", 0.25);
+                    // marker.ns = "detections/state";
+                    // marker.id = id;
+                    // marker.pose.position.x = mean(0);
+                    // marker.pose.position.y = mean(1);
+                    // marker.pose.position.z = mean(2);
+                    // marker.pose.orientation.w = 1;
+                    // marker.pose.orientation.y = 0;
+                    // marker.pose.orientation.x = 0;
+                    // marker.pose.orientation.z = 0;
+                    // marker.color.a = 1.0;
+                    // marker.color.g = 1.0;
+                    // marker.header.stamp = msg->header.stamp;
+                    // marker.header.frame_id = "map";
+                    // marker.type = visualization_msgs::Marker::SPHERE;
+                    // marker.scale.x = 0.25;
+                    // marker.scale.y = 0.25;
+                    // marker.scale.z = 0.25;
                     markers_msg.markers.push_back(marker);
+                    ++id;
+
+                    //Add +- 0.5 m sphere representing our target distance
+                    visualization_msgs::Marker marker_acc = makeSphereMarker("detections/state", id, 
+                        mean(0), mean(1), mean(2), 
+                        0.2, 0.0, 0.0, 1.0, 
+                        msg->header.stamp, "map", 1.0);
+                    markers_msg.markers.push_back(marker_acc);
                     ++id;
                 } else {
                     ROS_WARN("State: Something other than GAUSSIAN or MIXTURE wuht");
