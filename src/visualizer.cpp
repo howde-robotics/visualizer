@@ -152,23 +152,6 @@ void worldStateCallback(const wire_msgs::WorldState::ConstPtr& msg) {
                         mean(0), mean(1), mean(2), 
                         1.0, 0.0, 1.0, 0.0, 
                         msg->header.stamp, "map", 0.25);
-                    // marker.ns = "detections/state";
-                    // marker.id = id;
-                    // marker.pose.position.x = mean(0);
-                    // marker.pose.position.y = mean(1);
-                    // marker.pose.position.z = mean(2);
-                    // marker.pose.orientation.w = 1;
-                    // marker.pose.orientation.y = 0;
-                    // marker.pose.orientation.x = 0;
-                    // marker.pose.orientation.z = 0;
-                    // marker.color.a = 1.0;
-                    // marker.color.g = 1.0;
-                    // marker.header.stamp = msg->header.stamp;
-                    // marker.header.frame_id = "map";
-                    // marker.type = visualization_msgs::Marker::SPHERE;
-                    // marker.scale.x = 0.25;
-                    // marker.scale.y = 0.25;
-                    // marker.scale.z = 0.25;
                     markers_msg.markers.push_back(marker);
                     ++id;
 
