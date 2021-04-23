@@ -1,15 +1,6 @@
 <launch>
-    <!-- Transforms for testing -->
-    <!-- <node pkg="tf" type="static_transform_publisher" name="map_to_base_transform" args="0 0 0 0 0 0.7071068 0.7071068 /map /base_link 100" /> -->
-    <!-- <node pkg="tf" type="static_transform_publisher" name="base_to_realsense_transform" args="0.31 0 0.31 0 0 0 1 /base_link /realsense_link 100" /> -->
-    <!-- <node pkg="tf" type="static_transform_publisher" name="base_to_seek_transform" args="0.25 0 0.4 0 0 0 1 /base_link /seek_link 100" /> -->
-    <!-- <node pkg="tf" type="static_transform_publisher" name="base_to_lidar_transform" args="0.085 0 0.55 0 0 0 1 /base_link /lidar_link 100" /> -->
-
     <node pkg="visualizer" type="visualizer" name="visualizer">
-    </node>
-
-    
-    
+    </node>    
     
     <node pkg="jsk_rviz_plugins"
         type="rosconsole_overlay_text.py"
@@ -20,6 +11,8 @@
     </rosparam>
     </node>
     
+    <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py"/>
+
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualizer)/rviz/dragoon_viz.rviz" />
 
 </launch>

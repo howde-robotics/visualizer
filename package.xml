@@ -66,6 +66,7 @@
   <depend>jsk_rviz_plugins</depend>
   <depend>problib</depend>
   <depend>std_srvs</depend>
+  <depend>sound_play</depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
