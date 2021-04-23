@@ -1,12 +1,13 @@
-#include <ros/ros.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/ColorRGBA.h>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
-#include <jsk_rviz_plugins/OverlayText.h>
 #include <sstream>
 #include <vector>
 
+#include <ros/ros.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/ColorRGBA.h>
+#include <std_srvs/Empty.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <jsk_rviz_plugins/OverlayText.h>
 #include <tf2_ros/transform_listener.h>
 
 #include "dragoon_messages/watchHeartbeat.h"
@@ -25,39 +26,6 @@ void healthSubCB(const dragoon_messages::watchStatusConstPtr& msg)
     for (auto stat : msg->status_array){
         status.push_back(stat);
     }
-}
-
-
-ros::Publisher world_evidence_marker_pub_;
-ros::Publisher world_state_marker_pub_;
-double mixtureWeightThresh = 0.0;
-/* Stolen from Visualizer.cpp in the wire_viz package
- * Get the most probable Gaussian from a pdf
- */
-
-const pbl::Gaussian* getBestGaussian(const pbl::PDF& pdf, double min_weight) {
-	if (pdf.type() == pbl::PDF::GAUSSIAN) {
-		return pbl::PDFtoGaussian(pdf);
-	} else if (pdf.type() == pbl::PDF::MIXTURE) {
-		const pbl::Mixture* mix = pbl::PDFtoMixture(pdf);
-
-		if (mix){
-			const pbl::Gaussian* G_best = NULL;
-			double w_best = min_weight;
-			for(int i = 0; i < mix->components(); ++i) {
-				const pbl::PDF& pdf = mix->getComponent(i);
-				const pbl::Gaussian* G = pbl::PDFtoGaussian(pdf);
-				double w = mix->getWeight(i);
-				if (G && w > w_best) {
-					G_best = G;
-					w_best = w;
-				}
-			}
-			return G_best;
-		}
-    }
-
-	return NULL;
 }
 
 visualization_msgs::Marker makeSphereMarker(std::string ns, int32_t id, 
@@ -86,6 +54,63 @@ visualization_msgs::Marker makeSphereMarker(std::string ns, int32_t id,
     marker.scale.y = diameter;
     marker.scale.z = diameter;
     return marker;
+}
+
+visualization_msgs::Marker makeDragoonMarker(std::string frame, std::string resourceLocation) {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = frame;
+    marker.header.stamp = ros::Time();
+    // marker.ns = "my_namespace";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::MESH_RESOURCE;
+    marker.pose.position.x = -0.32;
+    marker.pose.position.y = 0.35;
+    marker.pose.position.z = -0.15;
+    marker.pose.orientation.x = 0.7071068;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 0.7071068;
+    marker.scale.x = 0.001;
+    marker.scale.y = 0.001;
+    marker.scale.z = 0.001;
+    marker.color.a = 1.0; 
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.mesh_resource = resourceLocation;
+    return marker;
+}
+
+
+ros::Publisher world_evidence_marker_pub_;
+ros::Publisher world_state_marker_pub_;
+double mixtureWeightThresh = 0.0;
+/* Stolen from Visualizer.cpp in the wire_viz package
+ * Get the most probable Gaussian from a pdf
+ */
+const pbl::Gaussian* getBestGaussian(const pbl::PDF& pdf, double min_weight) {
+	if (pdf.type() == pbl::PDF::GAUSSIAN) {
+		return pbl::PDFtoGaussian(pdf);
+	} else if (pdf.type() == pbl::PDF::MIXTURE) {
+		const pbl::Mixture* mix = pbl::PDFtoMixture(pdf);
+
+		if (mix){
+			const pbl::Gaussian* G_best = NULL;
+			double w_best = min_weight;
+			for(int i = 0; i < mix->components(); ++i) {
+				const pbl::PDF& pdf = mix->getComponent(i);
+				const pbl::Gaussian* G = pbl::PDFtoGaussian(pdf);
+				double w = mix->getWeight(i);
+				if (G && w > w_best) {
+					G_best = G;
+					w_best = w;
+				}
+			}
+			return G_best;
+		}
+    }
+
+	return NULL;
 }
 
 /*
@@ -123,7 +148,9 @@ void worldEvidenceCallback(const wire_msgs::WorldEvidence::ConstPtr& msg) {
 }
 
 
-
+int numHumansDetected = 0;
+std::string markerLocNamespace = "detections/stateLoc";
+std::string markerBoundNamespace = "detections/stateBounds";
 
 /*
  * World state callback. Creates a marker for each detection.
@@ -137,8 +164,6 @@ void worldStateCallback(const wire_msgs::WorldState::ConstPtr& msg) {
 	for (const wire_msgs::ObjectState& obj : msg->objects) {
 
 		// Create marker
-
-
         for (auto prop : obj.properties)
         {
             if (prop.attribute == "position")
@@ -147,33 +172,59 @@ void worldStateCallback(const wire_msgs::WorldState::ConstPtr& msg) {
                 const pbl::Gaussian* gauss = getBestGaussian(*pdf, mixtureWeightThresh);
                 if (gauss) {
                     const pbl::Vector& mean = gauss->getMean();
-                    visualization_msgs::Marker marker = makeSphereMarker("detections/state", id, 
+                    visualization_msgs::Marker markerLoc = makeSphereMarker(markerLocNamespace, id, 
                         mean(0), mean(1), mean(2), 
                         1.0, 0.0, 1.0, 0.0, 
                         msg->header.stamp, "map", 0.25);
-                    markers_msg.markers.push_back(marker);
-                    ++id;
+                    markers_msg.markers.push_back(markerLoc);
 
                     //Add +- 0.5 m sphere representing our target distance
-                    visualization_msgs::Marker marker_acc = makeSphereMarker("detections/state", id, 
+                    visualization_msgs::Marker markerBound = makeSphereMarker(markerBoundNamespace, id, 
                         mean(0), mean(1), mean(2), 
                         0.2, 0.0, 0.0, 1.0, 
                         msg->header.stamp, "map", 1.0);
-                    markers_msg.markers.push_back(marker_acc);
+                    markers_msg.markers.push_back(markerBound);
                     ++id;
-                } else {
-                    ROS_WARN("State: Something other than GAUSSIAN or MIXTURE wuht");
+
+                    //Check if we have detected a new human
+                    if (id > numHumansDetected) 
+                    {
+                        //do something
+                        // ROS_FATAL_STREAM("DETECTED at (" << mean(0) << ", " << mean(1) << ", " << mean(2) << ")");
+                        //update
+                        numHumansDetected = id;
+                    }
                 }
-            } else
-            {
-                ROS_WARN("State: Something other than position is being filtered wuht");
             }
-
         }
-
 	}
     world_state_marker_pub_.publish(markers_msg);   
 }
+
+bool resetWorldStateMarkerCB(std_srvs::Empty::Request &req,
+                             std_srvs::Empty::Response &resp) 
+{
+    //clear world state markers
+    visualization_msgs::MarkerArray markers_msg;
+    for (auto id = 0; id < numHumansDetected; ++id) {
+        visualization_msgs::Marker markerLoc;
+        markerLoc.ns = markerLocNamespace;
+        markerLoc.id = id;
+        markerLoc.action = visualization_msgs::Marker::DELETE;
+        markers_msg.markers.push_back(markerLoc);
+        
+        visualization_msgs::Marker markerBound;
+        markerBound.ns = markerBoundNamespace;
+        markerBound.id = id;
+        markerBound.action = visualization_msgs::Marker::DELETE;
+        markers_msg.markers.push_back(markerBound);
+
+    }
+    world_state_marker_pub_.publish(markers_msg);
+    numHumansDetected = 0;
+    return true;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -181,75 +232,48 @@ ros::init(argc, argv, "visualizer");
 ros::NodeHandle nh;
 ros::Rate loop_rate(10);
 
-ros::Subscriber health_sub = nh.subscribe("/health_status", 1, healthSubCB);
+ros::ServiceServer resetStateMarkerService = nh.advertiseService("/visualizer/reset_state_markers", resetWorldStateMarkerCB);
 
+ros::Subscriber health_sub = nh.subscribe("/health_status", 1, healthSubCB);
 ros::Subscriber world_ev_sub = nh.subscribe("/world_evidence", 1, worldEvidenceCallback);
 ros::Subscriber world_st_sub = nh.subscribe("/world_state", 1, worldStateCallback);
 
-world_evidence_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/evidence", 10);
-world_state_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/state", 10);
+world_evidence_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/evidence", 1);
+world_state_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/state", 1);
 
-ros::Publisher overlay_pub = nh.advertise<jsk_rviz_plugins::OverlayText>("guiText", 10);
-jsk_rviz_plugins::OverlayText text;
-text = jsk_rviz_plugins::OverlayText();
-// theta = counter % 255 / 255.0;
-text.width = 400;
-text.height = 1000;
-text.left = 10;
-text.top = 10;
-text.text_size = 12;
-text.line_width = 2;
-text.font = "DejaVu Sans Mono";
-// text.text = "FUCKING FUCKING FUCK GUFKCSJLDNSJDN";
-
-
+ros::Publisher overlay_pub = nh.advertise<jsk_rviz_plugins::OverlayText>("guiText", 1);
+jsk_rviz_plugins::OverlayText healthMonitorText;
+healthMonitorText = jsk_rviz_plugins::OverlayText();
 
 ros::Publisher vis_pub = nh.advertise<visualization_msgs::Marker>( "dragoon_mesh", 0);
-visualization_msgs::Marker marker;
-marker.header.frame_id = "/base_link";
-marker.header.stamp = ros::Time();
-// marker.ns = "my_namespace";
-marker.id = 0;
-marker.type = visualization_msgs::Marker::MESH_RESOURCE;
-marker.pose.position.x = -0.32;
-marker.pose.position.y = 0.35;
-marker.pose.position.z = -0.15;
-marker.pose.orientation.x = 0.7071068;
-marker.pose.orientation.y = 0.0;
-marker.pose.orientation.z = 0.0;
-marker.pose.orientation.w = 0.7071068;
-marker.scale.x = 0.001;
-marker.scale.y = 0.001;
-marker.scale.z = 0.001;
-marker.color.a = 1.0; // Don't forget to set the alpha!
-marker.color.r = 1.0;
-marker.color.g = 0.0;
-marker.color.b = 0.0;
-marker.mesh_resource = "package://visualizer/meshes/DRAGOON_SINGLE_bin.STL";
-// vis_pub.publish( marker );
-int count = 0;
+visualization_msgs::Marker dragoonMarker = makeDragoonMarker(
+    "base_link",
+    "package://visualizer/meshes/DRAGOON_SINGLE_bin.STL");
+
+std::vector<std::string> heartbeatNames {
+    "lidar", "seek", "realsense_rgb", "realsense_depth", 
+    "transformed_imu", "localize", "detection", 
+    "detection_filtering", "slam"};
+
 while(ros::ok()) {
-    vis_pub.publish(marker);
-    ++count;
+    vis_pub.publish(dragoonMarker);
     std::stringstream ss;
-    std::vector<std::string> heartbeatNames {"lidar", "seek", "realsense_rgb", "realsense_depth", 
-                                    "transformed_imu", "localize", "detection", 
-                                    "detection_filtering", "slam"};
+
     ss << "Health Status" << std::endl;
     if(status.size() <= heartbeatNames.size()) {
         for (auto ind = 0; ind < status.size(); ++ind)
         {
-            ss << heartbeatNames.at(ind) << ":\t" << (status.at(ind) ? "<span style=\"color: green;\">OK</span>" :
-                                        "<span style=\"color: red;\">BAD</span>" )
-            << std::endl;
+            ss << heartbeatNames.at(ind) << ":\t" << (status.at(ind) ? 
+                "<span style=\"color: green;\">OK</span>" :
+                "<span style=\"color: red;\">BAD</span>" )
+                << std::endl;
         }
     } else {
         ss << "No Health Status to report" << std::endl;
     }
     
-    text.text = ss.str();
-    overlay_pub.publish(text);
-    // ROS_WARN("test warning");
+    healthMonitorText.text = ss.str();
+    overlay_pub.publish(healthMonitorText);
     ros::spinOnce();
     loop_rate.sleep();
 }

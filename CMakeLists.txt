@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  std_srvs
   visualization_msgs
   jsk_rviz_plugins
   dragoon_messages
@@ -109,7 +110,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES visualizer
- CATKIN_DEPENDS roscpp sensor_msgs std_msgs visualization_msgs jsk_rviz_plugins dragoon_messages problib
+ CATKIN_DEPENDS roscpp sensor_msgs std_msgs std_srvs 
+    visualization_msgs jsk_rviz_plugins dragoon_messages problib
 #  DEPENDS system_lib
 )
 
