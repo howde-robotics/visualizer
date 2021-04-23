@@ -1,17 +1,18 @@
 <launch>
+
+    <include file="$(find sound_play)/soundplay_node.launch"/>
+
     <node pkg="visualizer" type="visualizer" name="visualizer">
-    </node>    
+    </node> 
     
     <node pkg="jsk_rviz_plugins"
-        type="rosconsole_overlay_text.py"
-        respawn="true"
-        name="rosconsole_overlay_text">
-    <rosparam>
-      reverse_lines: false
-    </rosparam>
+      type="rosconsole_overlay_text.py"
+      respawn="true"
+      name="rosconsole_overlay_text">
+      <rosparam>
+        reverse_lines: false
+      </rosparam>
     </node>
-    
-    <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py"/>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualizer)/rviz/dragoon_viz.rviz" />
 

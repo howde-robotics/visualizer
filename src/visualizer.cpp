@@ -10,6 +10,7 @@
 #include <jsk_rviz_plugins/OverlayText.h>
 #include <tf2_ros/transform_listener.h>
 #include <sound_play/sound_play.h>
+#include <sound_play/SoundRequest.h>
 
 #include "dragoon_messages/watchHeartbeat.h"
 #include "dragoon_messages/watchStatus.h"
@@ -39,8 +40,11 @@ struct visualizer
 
     ros::Timer timer_;
 
-    visualizer(double timerFreq) : nh()
+    sound_play::SoundClient soundPlayer;
+
+    visualizer(double timerFreq) : nh(), soundPlayer(nh, "/robotsound")
     {
+        
         timer_ = nh.createTimer(ros::Rate(timerFreq), &visualizer::timerCallback, this);
 
         resetStateMarkerService = nh.advertiseService("/visualizer/reset_state_markers", 
@@ -59,11 +63,11 @@ struct visualizer
         dragoonMarker= makeDragoonMarker(
             "base_link",
             "package://visualizer/meshes/DRAGOON_SINGLE_bin.STL");
-
     }
 
     void timerCallback(const ros::TimerEvent& e)
     {
+        
         vis_pub.publish(dragoonMarker);
     
         //health monitor information
@@ -76,9 +80,9 @@ struct visualizer
     }
 
     std::vector<std::string> heartbeatNames {
-    "Lidar", "Thermal", "RGB", "Depth", 
-    "IMU", "Detection Localization", "Visual Detection", 
-    "Detection Filtering", "SLAM"};
+        "Lidar", "Thermal", "RGB", "Depth", 
+        "IMU", "Detection Localization", "Visual Detection", 
+        "Detection Filtering", "SLAM"};
 
     std::stringstream healthStatusStringStream;
     void healthSubCB(const dragoon_messages::watchStatusConstPtr& msg)
@@ -263,8 +267,7 @@ struct visualizer
                         //Check if we have detected a new human
                         if (id > numHumansDetected) 
                         {
-                            //do something
-                            // soundPlayer.play(2);
+                            soundPlayer.say("Fuck yeah, Human Detected");
                             //update
                             numHumansDetected = id;
                         }
@@ -305,12 +308,11 @@ struct visualizer
 int main(int argc, char** argv)
 {
 ros::init(argc, argv, "visualizer");
-
 double timerFreq(10);
 visualizer visNode(timerFreq);
-
-
-
+// ros::NodeHandle nh;
+// sound_play::SoundClient sc = sound_play::SoundClient(nh, "robotsound");
+// ros::Rate loop_rate(0.3);
 while(ros::ok()) {
     ros::spinOnce();
 }
