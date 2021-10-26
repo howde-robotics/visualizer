@@ -1,9 +1,11 @@
 #include <sstream>
 #include <vector>
+#include <string>
 
 #include <ros/ros.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/ColorRGBA.h>
+#include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -27,6 +29,7 @@ struct visualizer
     ros::Subscriber health_sub;
     ros::Subscriber world_ev_sub;
     ros::Subscriber world_st_sub;
+    ros::Subscriber behavior_state_sub;
 
     ros::Publisher world_evidence_marker_pub_;
     ros::Publisher world_state_marker_pub_;
@@ -37,6 +40,7 @@ struct visualizer
     jsk_rviz_plugins::OverlayText healthMonitorText;
     jsk_rviz_plugins::OverlayText detectedLocsText;
     visualization_msgs::Marker dragoonMarker;
+    std::string behavior_state_text;
 
     ros::Timer timer_;
 
@@ -53,6 +57,7 @@ struct visualizer
         health_sub = nh.subscribe("/health_status", 1, &visualizer::healthSubCB, this);
         world_ev_sub = nh.subscribe("/world_evidence", 1, &visualizer::worldEvidenceCallback, this);
         world_st_sub = nh.subscribe("/world_state", 1, &visualizer::worldStateCallback, this);
+        behavior_state_sub = nh.subscribe("/behavior_state_text", 1, &visualizer::behaviorStateCallback, this);
         
         world_evidence_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/evidence", 1);
         world_state_marker_pub_ = nh.advertise<visualization_msgs::MarkerArray>("/human_detections_vis/state", 1);
@@ -63,6 +68,11 @@ struct visualizer
         dragoonMarker= makeDragoonMarker(
             "base_link",
             "package://visualizer/meshes/DRAGOON_SINGLE_bin.STL");
+    }
+
+    void behaviorStateCallback(const std_msgs::String &msg)
+    {
+        behavior_state_text = msg.data;
     }
 
     void timerCallback(const ros::TimerEvent& e)
@@ -101,6 +111,7 @@ struct visualizer
         } else {
             healthStatusStringStream << "No Health Status to report" << std::endl;
         }
+        healthStatusStringStream << "Behavior State: " << behavior_state_text << std::endl;
     }
 
     visualization_msgs::Marker makeSphereMarker(std::string ns, int32_t id, 
